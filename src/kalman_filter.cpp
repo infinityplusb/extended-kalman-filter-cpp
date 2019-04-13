@@ -45,10 +45,12 @@ void KalmanFilter::Update(const VectorXd &z) {
     MatrixXd I = MatrixXd::Identity(x_size, x_size);
 
     VectorXd y = z - H_ * x_;
-    MatrixXd Ht = H_.transpose();
-    MatrixXd S = H_ * P_ * Ht + R_;
+
+    MatrixXd P_Ht = P_ * H_.transpose();
+
+    MatrixXd S = H_ * P_Ht + R_;
     MatrixXd Si = S.inverse();
-    MatrixXd K =  P_ * Ht * Si;
+    MatrixXd K =  P_Ht * Si;
 
     // new state
     x_ = x_ + (K * y);
@@ -58,6 +60,7 @@ void KalmanFilter::Update(const VectorXd &z) {
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
     long x_size = x_.size();
     MatrixXd I = MatrixXd::Identity(x_size, x_size);
+    bool nullify = false;
     /**
     * update the state by using Extended Kalman Filter equations
     */
@@ -66,25 +69,37 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     float theta = atan2(x_(1), x_(0));
 
     VectorXd z_prediction = VectorXd(3);
-    cout << p << endl;
-    cout << theta << endl;
-    cout << p_n << endl;
+    if((fabs(x_(0)) < 0.0001 | fabs(x_(1)) < 0.0001))
+    {
+      nullify = true;
+      cout << "Small theta" << endl;
+      theta = 0;
+    }
+    cout << "p: " << p << endl;
+    cout << "theta: " << theta << endl;
+    cout << "p_n: " << p_n << endl;
     z_prediction << p, theta, p_n;
 
+
     VectorXd y = z - z_prediction ;
-
     float angle = y(1);
-    cout << M_PI << endl;
-    while (angle > M_PI)
-      angle -= 2* M_PI;
-    while (angle < -M_PI)
-      angle += 2* M_PI;
-    y(1) = angle ;
 
-    MatrixXd Ht = H_.transpose();
-    MatrixXd S = H_ * P_ * Ht + R_;
+    if(!nullify)
+    {
+        while (angle > M_PI)
+          angle -= 2* M_PI;
+        while (angle < -M_PI)
+          angle += 2* M_PI;
+        y(1) = angle ;
+    }
+    else
+      y(1) = 0;
+
+    MatrixXd P_Ht = P_ *  H_.transpose();
+
+    MatrixXd S = H_ * P_Ht + R_;
     MatrixXd Si = S.inverse();
-    MatrixXd K = P_ * Ht * Si;
+    MatrixXd K = P_Ht * Si;
 
     //new estimate
     x_ = x_ + (K * y);

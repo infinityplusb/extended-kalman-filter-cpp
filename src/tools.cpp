@@ -58,6 +58,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
    float v_y = x_state(3);
 
    float a1 = p_x*p_x + p_y*p_y;
+   float b1 = sqrt(a1);
    // cout << a1 << endl;
    // if we can't devide by zero
    if(fabs(a1) < 0.0001)
@@ -66,12 +67,12 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
      return MatrixXd::Zero(3,4);
    }
 
-   Hj << (p_x / sqrt(a1)), (p_y/ sqrt(a1)), 0, 0,
-        -(p_y/a1), (p_x/a1), 0, 0,
-        p_y*(v_x*p_y - v_y*p_x)/(a1*sqrt(a1)),
-          p_x*(p_x*v_y - p_y*v_x)/(a1*sqrt(a1)),
-          p_x/sqrt(a1),
-          p_y/sqrt(a1);
+   Hj << (p_x/b1),      (p_y/b1),      0,      0,
+        -(p_y/a1),      (p_x/a1),      0,      0,
+        p_y*(v_x*p_y - v_y*p_x)/(a1*b1),
+          p_x*(p_x*v_y - p_y*v_x)/(a1*b1),
+          p_x/b1,
+          p_y/b1;
 
   // cout << "Returning the Jacobian! " << endl;
    return Hj;

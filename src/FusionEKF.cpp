@@ -32,6 +32,10 @@ FusionEKF::FusionEKF() {
                 0, 0.0009, 0,
                 0, 0, 0.09;
 
+    //initialize measurement matrix for laser
+    H_laser_ << 1, 0, 0, 0,
+                0, 1, 0, 0;
+
     /**
     * Set the process and measurement noises
     */
@@ -94,7 +98,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
     // done initializing, no need to predict or update
     is_initialized_ = true;
-    cout << "First measurement complete" << endl;
+    // cout << "First measurement complete" << endl;
     return;
   }
 
