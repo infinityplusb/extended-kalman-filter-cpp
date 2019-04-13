@@ -59,7 +59,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     long x_size = x_.size();
     MatrixXd I = MatrixXd::Identity(x_size, x_size);
     /**
-    * TODO: update the state by using Extended Kalman Filter equations
+    * update the state by using Extended Kalman Filter equations
     */
     float p = sqrt(pow(x_(0), 2) + pow(x_(1), 2));
     float p_n = (x_(0) * x_(2) + x_(1) * x_(3))/ p;

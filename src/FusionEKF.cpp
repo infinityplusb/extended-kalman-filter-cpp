@@ -33,8 +33,7 @@ FusionEKF::FusionEKF() {
                 0, 0, 0.09;
 
     /**
-    * TODO: Finish initializing the FusionEKF.
-    * TODO: Set the process and measurement noises
+    * Set the process and measurement noises
     */
     // initialise state vector
     ekf_.x_ = VectorXd(4);
@@ -69,8 +68,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    */
   if (!is_initialized_) {
     /**
-     * TODO: Initialize the state ekf_.x_ with the first measurement.
-     * TODO: Create the covariance matrix.
+     * Initialize the state ekf_.x_ with the first measurement.
+     * Create the covariance matrix.
      * You'll need to convert radar from polar to cartesian coordinates.
      */
 
@@ -80,14 +79,14 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.x_ << 1, 1, 1, 1;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-      // TODO: Convert radar from polar to cartesian coordinates
-      //         and initialize state.
+      // Convert radar from polar to cartesian coordinates
+      // and initialize state.
       const float rho = measurement_pack.raw_measurements_[0];
       const float phi = measurement_pack.raw_measurements_[1];
       ekf_.x_ << rho * cos(phi), rho * sin(phi), 0, 0;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
-      // TODO: Initialize state.
+      // Initialize state.
       ekf_.x_ << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1], 0, 0;
     }
 
@@ -104,9 +103,9 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     */
 
     /**
-      * TODO: Update the state transition matrix F according to the new elapsed time.
+      * Update the state transition matrix F according to the new elapsed time.
       * Time is measured in seconds.
-      * TODO: Update the process noise covariance matrix.
+      * Update the process noise covariance matrix.
       * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
     */
     //compute the time elapsed between the current and previous measurements
@@ -120,48 +119,42 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     //Modify the F matrix so that the time is integrated
     ekf_.F_(0, 2) = delta_1;
     ekf_.F_(1, 3) = delta_1;
-    cout << "Step 01: " << endl;
+    // cout << "Step 01: " << endl;
     //set the acceleration noise components
     const float noise_ax = 9;
     const float noise_ay = 9;
-    cout << "Step 02: " << endl;
+    // cout << "Step 02: " << endl;
     //set the process covariance matrix Q
     ekf_.Q_ = MatrixXd(4, 4);
     ekf_.Q_ <<  delta_4/4*noise_ax, 0, delta_3/2*noise_ax, 0,
                 0, delta_4/4*noise_ay, 0, delta_3/2*noise_ay,
                 delta_3/2*noise_ax, 0, delta_2*noise_ax, 0,
                 0, delta_3/2*noise_ay, 0, delta_2*noise_ay;
-    cout << "Step 03: " << endl;
+    // cout << "Step 03: " << endl;
 
     ekf_.Predict();
-    cout << "Predict Done!" << endl;
+    // cout << "Predict Done!" << endl;
 
   /**
    * Update
    */
 
-  /**
-   * TODO:
-   * - Use the sensor type to perform the update step.
-   * - Update the state and covariance matrices.
-   */
-
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-    cout << "Started Radar: " << endl;
-    // TODO: Radar updates
+    // cout << "Started Radar: " << endl;
+    // Radar updates
     Hj_ = tools.CalculateJacobian(ekf_.x_);
-    cout << "Calculated the Jacobian: " << endl;
+    // cout << "Calculated the Jacobian: " << endl;
     if(!Hj_.isZero())
     {
       ekf_.H_ = Hj_;
       ekf_.R_ = R_radar_;
       ekf_.UpdateEKF(measurement_pack.raw_measurements_);
     }
-    cout << "Finished Radar: " << endl;
+    // cout << "Finished Radar: " << endl;
   }
   else {
-    cout << "Lidar: " << endl;
-    // TODO: Laser updates
+    // cout << "Lidar: " << endl;
+    // Laser updates
     ekf_.R_ = R_laser_;
     ekf_.H_ = H_laser_;
     ekf_.Update(measurement_pack.raw_measurements_);
