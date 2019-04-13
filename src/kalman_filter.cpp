@@ -3,10 +3,13 @@
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-/* 
- * Please note that the Eigen library does not initialize 
+/*
+ * Please note that the Eigen library does not initialize
  *   VectorXd or MatrixXd objects with zeros upon creation.
  */
+#include <iostream>
+using std::cout;
+using std::endl;
 
 KalmanFilter::KalmanFilter() {}
 
@@ -23,19 +26,67 @@ void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
 }
 
 void KalmanFilter::Predict() {
-  /**
-   * TODO: predict the state
-   */
+   /**
+    * 25-8
+    * KF Prediction step
+    */
+   x_ = F_ * x_ ;//+ u; // where u is noise
+   MatrixXd Ft = F_.transpose();
+   P_ = F_ * P_ * Ft + Q_;
+
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
-  /**
-   * TODO: update the state by using Kalman Filter equations
-   */
+   /**
+    * 25-8
+    * KF Measurement update step
+    */
+    long x_size = x_.size();
+    MatrixXd I = MatrixXd::Identity(x_size, x_size);
+
+    VectorXd y = z - H_ * x_;
+    MatrixXd Ht = H_.transpose();
+    MatrixXd S = H_ * P_ * Ht + R_;
+    MatrixXd Si = S.inverse();
+    MatrixXd K =  P_ * Ht * Si;
+
+    // new state
+    x_ = x_ + (K * y);
+    P_ = (I - K * H_) * P_;
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
-  /**
-   * TODO: update the state by using Extended Kalman Filter equations
-   */
+    long x_size = x_.size();
+    MatrixXd I = MatrixXd::Identity(x_size, x_size);
+    /**
+    * TODO: update the state by using Extended Kalman Filter equations
+    */
+    float p = sqrt(pow(x_(0), 2) + pow(x_(1), 2));
+    float p_n = (x_(0) * x_(2) + x_(1) * x_(3))/ p;
+    float theta = atan2(x_(1), x_(0));
+
+    VectorXd z_prediction = VectorXd(3);
+    cout << p << endl;
+    cout << theta << endl;
+    cout << p_n << endl;
+    z_prediction << p, theta, p_n;
+
+    VectorXd y = z - z_prediction ;
+
+    float angle = y(1);
+    cout << M_PI << endl;
+    while (angle > M_PI)
+      angle -= 2* M_PI;
+    while (angle < -M_PI)
+      angle += 2* M_PI;
+    y(1) = angle ;
+
+    MatrixXd Ht = H_.transpose();
+    MatrixXd S = H_ * P_ * Ht + R_;
+    MatrixXd Si = S.inverse();
+    MatrixXd K = P_ * Ht * Si;
+
+    //new estimate
+    x_ = x_ + (K * y);
+    P_ = (I - K * H_) * P_;
 }
